@@ -14,7 +14,7 @@ def parse_configuration():
     """
     parser = argparse.ArgumentParser(description='Process files in a directory.')
 
-    parser.add_argument('-i', '--input', type=str, nargs='?', default='../audio/kepler STEMS DRUMS.mp3',
+    parser.add_argument('-i', '--input', type=str, nargs='?', default='audio/kepler.mp3',
                         help='Path to the file or directory')
 
     args = parser.parse_args()
