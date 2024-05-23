@@ -1,13 +1,16 @@
+import os
 import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 
 from setup import parse_configuration
+from utils import normalize_array, normalize_array_01
 
 
 def preview(audio_file):
+
     hop_length = 512
-    fig, ax = plt.subplots(nrows=3)
+    fig, ax = plt.subplots(nrows=4)
 
     y, sr = librosa.load(audio_file, offset=26, duration=15)
     num_samples = y.shape[0]
@@ -40,9 +43,6 @@ def preview(audio_file):
     print(
         f'Computed stft with hop length {hop_length}, got {stft_mag_db.shape} frames, {samples_per_frame} samples per frame')
 
-    # librosa.display.specshow(stft_mag_db, y_axis='log', x_axis='time', ax=ax[1])
-    # ax[1].set(title='log Power spectrogram')
-
     # Spectral features : note spectral centroid and bandwidth seem to follow each other quite closely
 
     MS = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=12, fmax=8000)
@@ -65,6 +65,19 @@ def preview(audio_file):
     ax[2].vlines(onset_times[onset_frames], -1, 1, color='lightcoral', alpha=0.9, linestyle='-', label='Onsets')
     ax[2].vlines(librosa.frames_to_time(onset_bt), -1, 1, label='Backtracked', color='indianred')
     ax[2].legend()
+
+    lows = librosa.power_to_db(np.sum(MS[:4, :], axis=0))
+    mids = librosa.power_to_db(np.sum(MS[4:8, :], axis=0))
+    highs = librosa.power_to_db(np.sum(MS[8:12, :], axis=0))
+
+    librosa.display.waveshow(y=y, sr=sr, ax=ax[3], color='lightgray')
+
+    ax[3].plot(onset_times, normalize_array_01(highs), color='cornflowerblue', label='Highs')
+    ax[3].plot(onset_times, normalize_array_01(mids), color='mediumseagreen', label='Mids')
+    ax[3].plot(onset_times, normalize_array_01(lows), color='darksalmon', label='Lows')
+
+    file_name = os.path.splitext(os.path.basename(audio_file))[0]
+    fig.canvas.manager.set_window_title(file_name)
 
 
 if __name__ == "__main__":
