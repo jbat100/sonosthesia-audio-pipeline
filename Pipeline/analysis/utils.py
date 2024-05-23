@@ -15,6 +15,7 @@ def normalize_array_01(array):
     normalized_array = (array - min_val) / (max_val - min_val)
     return normalized_array
 
+
 def change_extension(file_path, new_extension):
     base = os.path.splitext(file_path)[0]
     return base + new_extension

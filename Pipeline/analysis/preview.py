@@ -75,6 +75,7 @@ def preview(audio_file):
     ax[3].plot(onset_times, normalize_array_01(highs), color='cornflowerblue', label='Highs')
     ax[3].plot(onset_times, normalize_array_01(mids), color='mediumseagreen', label='Mids')
     ax[3].plot(onset_times, normalize_array_01(lows), color='darksalmon', label='Lows')
+    ax[2].legend()
 
     file_name = os.path.splitext(os.path.basename(audio_file))[0]
     fig.canvas.manager.set_window_title(file_name)

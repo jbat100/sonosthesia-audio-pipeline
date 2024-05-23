@@ -2,7 +2,7 @@ import argparse
 import os
 from collections import namedtuple
 
-Configuration = namedtuple('Configuration', ['file_paths'])
+Configuration = namedtuple('Configuration', ['file_paths', 'raw'])
 
 
 def parse_configuration():
@@ -17,6 +17,8 @@ def parse_configuration():
     parser.add_argument('-i', '--input', type=str, nargs='?', default='audio/kepler.mp3',
                         help='Path to the file or directory')
 
+    parser.add_argument('-r', '--raw', action='store_true', help='Output in raw format')
+
     args = parser.parse_args()
 
     # If the specified path is a directory, get absolute file paths of all files in the directory
@@ -26,4 +28,4 @@ def parse_configuration():
     else:
         file_paths = [os.path.abspath(args.input)]
 
-    return Configuration(file_paths=file_paths)
+    return Configuration(file_paths=file_paths, raw=args.raw)

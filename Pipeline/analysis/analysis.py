@@ -4,18 +4,18 @@ import msgpack
 import numpy as np
 
 from setup import parse_configuration
-from utils import change_extension
+from utils import change_extension, normalize_array_01
 
-def run_analysis(audio_file):
+
+def run_analysis(file_path, raw):
 
     hop_length = 512
 
-    #y, sr = librosa.load(audio_file, offset=26, duration=15)
-    y, sr = librosa.load(audio_file)
+    y, sr = librosa.load(file_path)
     num_samples = y.shape[0]
     duration = num_samples / sr
 
-    print(f'Loaded {audio_file}, got {num_samples} samples at rate {sr}, estimated duration is {duration}')
+    print(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}')
 
     onset_env = librosa.onset.onset_strength(y=y, sr=sr, aggregate=np.median)
     tempo, beats = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
@@ -27,18 +27,18 @@ def run_analysis(audio_file):
     stft_mag, stft_phase = librosa.magphase(stft)
     stft_mag_db = librosa.amplitude_to_db(stft_mag, ref=np.max)
     rms = librosa.feature.rms(S=stft_mag)[0]
-    rms_db = librosa.amplitude_to_db(rms, ref=np.max)
+    rms_db = normalize_array_01(librosa.amplitude_to_db(rms, ref=np.max))
     num_frames = stft_mag_db.shape[1]
     samples_per_frame = num_samples / num_frames
 
     print(f'Computed stft with hop length {hop_length}, got {stft_mag_db.shape} frames, {samples_per_frame} samples per frame')
 
     MS = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=12, fmax=8000)
-    cent = librosa.feature.spectral_centroid(y=y, sr=sr).T
+    cent = librosa.feature.spectral_centroid(y=y, sr=sr).ravel()
 
-    lows = librosa.power_to_db(np.sum(MS[:4, :], axis=0))
-    mids = librosa.power_to_db(np.sum(MS[4:8, :], axis=0))
-    highs = librosa.power_to_db(np.sum(MS[8:12, :], axis=0))
+    lows = normalize_array_01(librosa.power_to_db(np.sum(MS[:4, :], axis=0)))
+    mids = normalize_array_01(librosa.power_to_db(np.sum(MS[4:8, :], axis=0)))
+    highs = normalize_array_01(librosa.power_to_db(np.sum(MS[8:12, :], axis=0)))
 
     onset_frames = librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr)
     onset_bts = librosa.onset.onset_backtrack(onset_frames, onset_env)
@@ -61,12 +61,21 @@ def run_analysis(audio_file):
         data_point = data_points[onset_bt]
         data_point["onset"] = True
 
+    if raw:
+        write_raw(data_points, file_path)
+    else:
+        write_packed(data_points, file_path)
+
+
+def write_packed(data_points, file_path):
     packed_data_points = msgpack.packb(data_points, use_bin_type=True)
-    output_file = change_extension(audio_file, '.aad')
+    output_file = change_extension(file_path, '.aad')
     print(f'Packed {len(data_points)} analysis points into {len(packed_data_points)} bytes')
     with open(output_file, 'wb') as file:
         file.write(packed_data_points)
 
+
+def write_raw(data_points, file_path):
     raw_points = []
     for data_point in data_points:
         raw_points.extend([
@@ -78,9 +87,7 @@ def run_analysis(audio_file):
             data_point['centroid'],
             float(data_point['onset'])
         ])
-
     # note : using raw float 32-bit data is better than using msgpack to serialize an array of float
-
     float_data_points = array('f', raw_points)
     raw_data_points = float_data_points.tobytes()
     raw_output_file = change_extension(audio_file, '.aadf')
@@ -93,7 +100,7 @@ if __name__ == "__main__":
     configuration = parse_configuration()
 
     for audio_file in configuration.file_paths:
-        run_analysis(audio_file)
+        run_analysis(audio_file, configuration.raw)
 
     print('Done')
 
