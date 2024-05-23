@@ -1,75 +1,101 @@
 import librosa.display
-import matplotlib.pyplot as plt
+from array import array
+import msgpack
 import numpy as np
 
 from setup import parse_configuration
+from utils import change_extension
 
-configuration = parse_configuration()
+def run_analysis(audio_file):
 
-audio_file = '../audio/kepler STEMS DRUMS.mp3'
+    hop_length = 512
 
+    #y, sr = librosa.load(audio_file, offset=26, duration=15)
+    y, sr = librosa.load(audio_file)
+    num_samples = y.shape[0]
+    duration = num_samples / sr
 
-hop_length = 512
-fig, ax = plt.subplots(nrows=3)
+    print(f'Loaded {audio_file}, got {num_samples} samples at rate {sr}, estimated duration is {duration}')
 
-y, sr = librosa.load(audio_file, offset=26, duration=15)
-num_samples = y.shape[0]
-duration = num_samples / sr
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr, aggregate=np.median)
+    tempo, beats = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
+    frame_times = librosa.times_like(onset_env, sr=sr, hop_length=hop_length)
 
-print(f'Loaded {audio_file}, got {num_samples} samples at rate {sr}, estimated duration is {duration}')
+    print(f'Extracted tempo {tempo}, with {beats.shape[0]} beats')
 
-onset_env = librosa.onset.onset_strength(y=y, sr=sr, aggregate=np.median)
-tempo, beats = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
-onset_times = librosa.times_like(onset_env, sr=sr, hop_length=hop_length)
+    stft = librosa.stft(y)
+    stft_mag, stft_phase = librosa.magphase(stft)
+    stft_mag_db = librosa.amplitude_to_db(stft_mag, ref=np.max)
+    rms = librosa.feature.rms(S=stft_mag)[0]
+    rms_db = librosa.amplitude_to_db(rms, ref=np.max)
+    num_frames = stft_mag_db.shape[1]
+    samples_per_frame = num_samples / num_frames
 
-librosa.display.waveshow(y=y, sr=sr, ax=ax[0], color="lightgray")
-ax[0].vlines(onset_times[beats], -1, 1, alpha=0.5, color='r', linestyle='-', label='Beats')
-ax[0].label_outer()
+    print(f'Computed stft with hop length {hop_length}, got {stft_mag_db.shape} frames, {samples_per_frame} samples per frame')
 
-print(f'Extracted tempo {tempo}, with {beats.shape[0]} beats')
+    MS = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=12, fmax=8000)
+    cent = librosa.feature.spectral_centroid(y=y, sr=sr).T
 
-stft = librosa.stft(y)
-stft_mag, stft_phase = librosa.magphase(stft)
-stft_mag_db = librosa.amplitude_to_db(stft_mag, ref=np.max)
-rms = librosa.feature.rms(S=stft_mag)[0]
-rms_db = librosa.amplitude_to_db(rms, ref=np.max)
-rms_times = librosa.times_like(rms_db)
-num_frames = stft_mag_db.shape[1]
-samples_per_frame = num_samples / num_frames
+    lows = librosa.power_to_db(np.sum(MS[:4, :], axis=0))
+    mids = librosa.power_to_db(np.sum(MS[4:8, :], axis=0))
+    highs = librosa.power_to_db(np.sum(MS[8:12, :], axis=0))
 
-ax[0].plot(rms_times, librosa.util.normalize(rms_db), label='RMS', color='gray')
-ax[0].legend()
+    onset_frames = librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr)
+    onset_bts = librosa.onset.onset_backtrack(onset_frames, onset_env)
 
-print(f'Computed stft with hop length {hop_length}, got {stft_mag_db.shape} frames, {samples_per_frame} samples per frame')
+    data_points = []
 
-# librosa.display.specshow(stft_mag_db, y_axis='log', x_axis='time', ax=ax[1])
-# ax[1].set(title='log Power spectrogram')
+    for frame in range(num_frames):
+        data_point = {
+            'time': float(frame_times[frame]),
+            'rms': float(rms_db[frame]),
+            'lows': float(lows[frame]),
+            'mids': float(mids[frame]),
+            'highs': float(highs[frame]),
+            'centroid': float(cent[frame]),
+            'onset': False
+        }
+        data_points.append(data_point)
 
-# Spectral features : note spectral centroid and bandwidth seem to follow each other quite closely
+    for onset_bt in onset_bts:
+        data_point = data_points[onset_bt]
+        data_point["onset"] = True
 
-MS = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=12, fmax=8000)
-MS_dB = librosa.power_to_db(MS, ref=np.max)
-librosa.display.specshow(MS_dB, x_axis='time', y_axis='mel', sr=sr, fmax=8000, ax=ax[1])
-cent = librosa.feature.spectral_centroid(y=y, sr=sr)
-cent_times = librosa.times_like(cent)
-ax[1].plot(cent_times, cent.T, label='Centroid', color='lightblue')
-spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
-spec_bw_times = librosa.times_like(spec_bw)
-ax[1].plot(spec_bw_times, spec_bw.T, label='Bandwidth', color='lightgreen')
-ax[1].legend()
+    packed_data_points = msgpack.packb(data_points, use_bin_type=True)
+    output_file = change_extension(audio_file, '.aad')
+    print(f'Packed {len(data_points)} analysis points into {len(packed_data_points)} bytes')
+    with open(output_file, 'wb') as file:
+        file.write(packed_data_points)
 
-onset_frames = librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr)
-librosa.display.waveshow(y=y, sr=sr, ax=ax[2], color="lightgray")
+    raw_points = []
+    for data_point in data_points:
+        raw_points.extend([
+            data_point['time'],
+            data_point['rms'],
+            data_point['lows'],
+            data_point['mids'],
+            data_point['highs'],
+            data_point['centroid'],
+            float(data_point['onset'])
+        ])
 
-onset_bt = librosa.onset.onset_backtrack(onset_frames, onset_env)
+    # note : using raw float 32-bit data is better than using msgpack to serialize an array of float
 
-ax[2].plot(onset_times, librosa.util.normalize(onset_env), label='Onset strength')
-ax[2].vlines(onset_times[onset_frames], -1, 1, color='lightcoral', alpha=0.9, linestyle='-', label='Onsets')
-ax[2].vlines(librosa.frames_to_time(onset_bt), -1, 1, label='Backtracked', color='indianred')
-ax[2].legend()
+    float_data_points = array('f', raw_points)
+    raw_data_points = float_data_points.tobytes()
+    raw_output_file = change_extension(audio_file, '.aadf')
+    print(f'Packed {len(raw_points)} raw floats into {len(raw_data_points)} bytes')
+    with open(raw_output_file, 'wb') as file:
+        file.write(raw_data_points)
 
+if __name__ == "__main__":
 
-plt.show()
+    configuration = parse_configuration()
+
+    for audio_file in configuration.file_paths:
+        run_analysis(audio_file)
+
+    print('Done')
 
 
 
