@@ -1,17 +1,18 @@
+import argparse
 import librosa.display
 from array import array
 import msgpack
 import numpy as np
 
-from setup import parse_configuration
-from utils import change_extension, normalize_array_01
+from setup import input_to_filepaths
+from utils import change_extension, normalize_array_01, clip_bin_signal
 
 
 def run_analysis(file_path, raw):
 
     hop_length = 512
 
-    y, sr = librosa.load(file_path)
+    y, sr = librosa.load(file_path, sr=None)
     num_samples = y.shape[0]
     duration = num_samples / sr
 
@@ -33,12 +34,12 @@ def run_analysis(file_path, raw):
 
     print(f'Computed stft with hop length {hop_length}, got {stft_mag_db.shape} frames, {samples_per_frame} samples per frame')
 
-    MS = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=12, fmax=8000)
+    MS = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=24, fmax=16000)
     cent = librosa.feature.spectral_centroid(y=y, sr=sr).ravel()
 
-    lows = normalize_array_01(librosa.power_to_db(np.sum(MS[:4, :], axis=0)))
-    mids = normalize_array_01(librosa.power_to_db(np.sum(MS[4:8, :], axis=0)))
-    highs = normalize_array_01(librosa.power_to_db(np.sum(MS[8:12, :], axis=0)))
+    lows = normalize_array_01(clip_bin_signal(librosa.power_to_db(np.sum(MS[:1, :], axis=0))))
+    mids = normalize_array_01(clip_bin_signal(librosa.power_to_db(np.sum(MS[3:4, :], axis=0))))
+    highs = normalize_array_01(clip_bin_signal(librosa.power_to_db(np.sum(MS[14:22, :], axis=0))))
 
     onset_frames = librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr)
     onset_bts = librosa.onset.onset_backtrack(onset_frames, onset_env)
@@ -97,10 +98,19 @@ def write_raw(data_points, file_path):
 
 if __name__ == "__main__":
 
-    configuration = parse_configuration()
+    parser = argparse.ArgumentParser(description='Preview audio analysis.')
 
-    for audio_file in configuration.file_paths:
-        run_analysis(audio_file, configuration.raw)
+    parser.add_argument('-i', '--input', type=str, nargs='?', default='audio/kepler.mp3',
+                        help='path to the file or directory')
+
+    parser.add_argument('-r', '--raw', action='store_true', help='output in raw format')
+
+    args = parser.parse_args()
+
+    file_paths = input_to_filepaths(args.input)
+
+    for audio_file in file_paths:
+        run_analysis(audio_file, args.raw)
 
     print('Done')
 

@@ -2,8 +2,6 @@ import argparse
 import os
 from collections import namedtuple
 
-Configuration = namedtuple('Configuration', ['file_paths', 'raw'])
-
 
 def parse_configuration():
     """
@@ -21,11 +19,12 @@ def parse_configuration():
 
     args = parser.parse_args()
 
+
+def input_to_filepaths(input_path):
     # If the specified path is a directory, get absolute file paths of all files in the directory
-    if os.path.isdir(args.input):
-        file_paths = [os.path.abspath(os.path.join(args.input, file)) for file in os.listdir(args.input)
+    if os.path.isdir(input_path):
+        file_paths = [os.path.abspath(os.path.join(input_path, file)) for file in os.listdir(input_path)
                       if file.lower().endswith(('.mp3', '.wav'))]
     else:
-        file_paths = [os.path.abspath(args.input)]
-
-    return Configuration(file_paths=file_paths, raw=args.raw)
+        file_paths = [os.path.abspath(input_path)]
+    return file_paths
