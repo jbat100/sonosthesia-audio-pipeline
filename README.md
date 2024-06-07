@@ -6,6 +6,8 @@ Python (Librosa) based tooling to analyse audio files and write results to file 
 
 ## Analysis with librosa
 
+![kepler](https://github.com/jbat100/sonosthesia-audio-pipeline/assets/1318918/aa2ef61a-0c2f-409c-8e7d-be3f6c92c8ed)
+
 ## Planed
 
 Allow source separation using frameworks such as [Open-Unmix](https://github.com/sigsep/open-unmix-pytorch), [Demucs](https://github.com/adefossez/demucs) or [Spleeter](https://github.com/deezer/spleeter)
