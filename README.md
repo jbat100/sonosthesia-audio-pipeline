@@ -6,12 +6,36 @@ Python (Librosa) based tooling to analyse audio files and write results to file 
 
 ## Analysis with librosa
 
+Librosa is used to extract audio features which are of particular interest for driving reactive visuals, notably:
+
+- Beats and tempo
+- RMS magnitude
+- Energy in low, mid and high frequency bands 
+- Onsets
+- Spectral centroid and bandwidth 
+
+The analysis data is writen to a file using MessagePack which is highly efficient both in terms of size and (de)serialization performance. The serialized data is an array of dictionaries each of which represents a time step
+
+```
+{
+    'time': float,
+    'rms': float,
+    'lows': float,
+    'mids': float,
+    'highs': float,
+    'centroid': float,
+    'onset': bool
+}
+```
+
+There is a preview mode which uses matplotlib to present analysis data 
+
 ![kepler](https://github.com/jbat100/sonosthesia-audio-pipeline/assets/1318918/aa2ef61a-0c2f-409c-8e7d-be3f6c92c8ed)
+
 
 ## Planed
 
 Allow source separation using frameworks such as [Open-Unmix](https://github.com/sigsep/open-unmix-pytorch), [Demucs](https://github.com/adefossez/demucs) or [Spleeter](https://github.com/deezer/spleeter)
-
 
 ## Notes
 
