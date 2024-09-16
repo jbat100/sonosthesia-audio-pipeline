@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sonosthesia-audio-pipeline"
+version = "0.0.1"
+authors = [
+  { name="Sonosthesia", email="jonathan@sonosthesia.com" },
+]
+description = "Sonosthesia tools for baking audio analysis data"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "matplotlib",
+  "scipy",
+  "librosa",
+  "msgpack",
+  "demucs"
+]
+
+[tool.setuptools]
+packages = ["sonosthesia-audio-pipeline"]
+
+[project.urls]
+"Homepage" = "https://github.com/jbat100/sonosthesia-audio-pipeline"
+"Source" = "https://github.com/jbat100/sonosthesia-audio-pipeline"
+"Issues" = "https://github.com/jbat100/sonosthesia-audio-pipeline/issues"

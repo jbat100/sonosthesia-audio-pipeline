@@ -2,6 +2,31 @@
 
 Python (Librosa) based tooling to analyse audio files and write results to file for use in realtime visualization apps. Results can be written using Message Pack or raw binary float arrays for efficient (de)serialization. Readers are provided for the Unity timeline, to be used alongside the original audio files.
 
+
+# Installation
+
+## Windows
+
+Currently the easiest way to get started is to install the latest python `3.12.x` (do not use the `3.13.x` pre-releases), follow instructions [here](https://www.python.org/downloads/release/python-3126/).
+
+Open the command prompt, cd into the root directory of this repository, then create a virtual environment by running
+
+```python -m venv venv```
+
+Activate the virtual environment by running
+
+```venv\Scripts\activate```
+
+Install pip dependencies
+
+```pip install librosa matplotlib msgpack```
+
+If you wan to run source seperation you will need to install 
+
+```pip install demucs```
+
+
+
 # Python Pipeline
 
 ## Analysis with librosa
@@ -35,12 +60,17 @@ There is a preview mode which uses matplotlib to present analysis data
 
 ## Planed
 
-Allow source separation using frameworks such as [Open-Unmix](https://github.com/sigsep/open-unmix-pytorch), [Demucs](https://github.com/adefossez/demucs) or [Spleeter](https://github.com/deezer/spleeter)
+Compare source separation using frameworks such as [Open-Unmix](https://github.com/sigsep/open-unmix-pytorch), [Demucs](https://github.com/adefossez/demucs) or [Spleeter](https://github.com/deezer/spleeter).
+
+Currently using [Demucs](https://github.com/adefossez/demucs) because it seems to score better on overall SDR and is a lot easier to install with pip than Spleeter.
+
+Look into using [Essentia](https://essentia.upf.edu/documentation.html) which seems to be good for highler level musical descriptors.
+
+
 
 ## Notes
 
-- Pipeline is a PyCharm project
-- Easiest to install python with [chocolatey](https://community.chocolatey.org/packages/python312) or homebrew
+- Can install python with [chocolatey](https://community.chocolatey.org/packages/python312) or homebrew
 - Note works with Python up to 3.12, issues with 3.13 as both librosa and matplotlib do not support it 
 - Exit command prompt on windows with Ctrl Z and enter
 - Locate interpreter on windows with ```python -c "import os, sys; print(os.path.dirname(sys.executable))"```
