@@ -8,7 +8,7 @@ from setup import input_to_filepaths
 from utils import change_extension, normalize_array_01, clip_bin_signal
 
 
-def run_analysis(file_path, raw):
+def run_analysis1(file_path, raw):
 
     hop_length = 512
 
@@ -63,12 +63,12 @@ def run_analysis(file_path, raw):
         data_point["onset"] = True
 
     if raw:
-        write_raw(data_points, file_path)
+        _write_raw(data_points, file_path)
     else:
-        write_packed(data_points, file_path)
+        _write_packed(data_points, file_path)
 
 
-def write_packed(data_points, file_path):
+def _write_packed(data_points, file_path):
     packed_data_points = msgpack.packb(data_points, use_bin_type=True)
     output_file = change_extension(file_path, '.aad')
     print(f'Packed {len(data_points)} sonosthesia-pipeline points into {len(packed_data_points)} bytes')
@@ -76,7 +76,7 @@ def write_packed(data_points, file_path):
         file.write(packed_data_points)
 
 
-def write_raw(data_points, file_path):
+def _write_raw(data_points, file_path):
     raw_points = []
     for data_point in data_points:
         raw_points.extend([
@@ -97,7 +97,7 @@ def write_raw(data_points, file_path):
         file.write(raw_data_points)
 
 
-def analysis_parser():
+def analysis1_parser():
     parser = argparse.ArgumentParser(description='Analyse an audio file')
     parser.add_argument('-i', '--input', type=str, nargs='?', default='audio/kepler.mp3',
                         help='path to the file or directory')
@@ -105,16 +105,16 @@ def analysis_parser():
     return parser
 
 
-def analysis():
-    args = analysis_parser().parse_args()
+def analysis1():
+    args = analysis1_parser().parse_args()
     file_paths = input_to_filepaths(args.input)
     for audio_file in file_paths:
-        run_analysis(audio_file, args.raw)
+        run_analysis1(audio_file, args.raw)
     print('Done')
 
 
 if __name__ == "__main__":
-    analysis()
+    analysis1()
 
 
 

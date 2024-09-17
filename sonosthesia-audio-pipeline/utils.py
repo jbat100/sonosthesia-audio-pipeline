@@ -2,6 +2,13 @@ import numpy as np
 import os
 
 
+def remap(array, in_min, in_max, out_min, out_max):
+    # Clip the value to be within the input range
+    array = np.clip(array, in_min, in_max)
+    # Perform the linear transformation to the new range
+    return (array - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+
 def normalize_array(array):
     array_mean_centered = array - np.mean(array)
     max_abs_value = np.max(np.abs(array_mean_centered))
