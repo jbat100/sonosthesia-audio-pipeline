@@ -2,37 +2,65 @@ import argparse
 import os.path
 import demucs.separate
 import shlex
+
+from colorama import just_fix_windows_console
+from termcolor import colored
 from setup import input_to_filepaths
 
 
-def run_separation(audio_file):
-    demucs.separate.main(shlex.split(f'--mp3 -n mdx_extra "{audio_file}"'))
+just_fix_windows_console()
 
 
-def run_separation_custom(audio_file):
-    directory = os.path.dirname(audio_file)
+def run_separation(audio_file, model):
+    demucs.separate.main(shlex.split(f'--mp3 -n {model} "{audio_file}"'))
+
+
+def get_output_directory(audio_file):
+    audio_file_directory = os.path.dirname(audio_file)
     file_name = os.path.basename(audio_file)
     name, ext = os.path.splitext(file_name)
+    return os.path.join(audio_file_directory, name)
+
+
+def run_separation_custom(audio_file, model):
+    output_directory = get_output_directory(audio_file)
     pattern = "{track}/{track}_{stem}.{ext}"
-    command = f'--mp3 -n mdx_extra --filename {pattern} -o "{directory}" "{audio_file}"'
-    print("Running separation : " + command)
+    command = f'--mp3 -n {model} --filename {pattern} -o "{output_directory}" "{audio_file}"'
+    print(colored("Running separation command : " + command, "blue"))
     demucs.separate.main(shlex.split(command))
 
 
-def separation_parser():
-    parser = argparse.ArgumentParser(description='Separate tracks.')
+# should be a way to extract that from the command output but there's a lot of stuff there...
+def separated_output_paths(audio_file, model):
+    file_name = os.path.basename(audio_file)
+    name, ext = os.path.splitext(file_name)
+    separated_output_directory = os.path.join(str(get_output_directory(audio_file)), model)
+    output_paths = []
+    for stem in ['bass', 'drums', 'vocals', 'other']:
+        output_name = f'{name}_{stem}{ext}'
+        output_path = os.path.join(str(separated_output_directory), output_name)
+        output_paths.append(output_path)
+    return output_paths
+
+
+def configure_separation_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
                         help='path to the file or directory')
-    return parser
+    parser.add_argument('-n', '--model', type=str, default='mdx_extra',
+                        help='demucs model used for the separation')
 
 
 def separation():
-    parser = separation_parser()
+    parser = argparse.ArgumentParser(description='Audio separation using demucs.')
+    configure_separation_parser(parser)
     args = parser.parse_args()
     file_paths = input_to_filepaths(args.input)
+    output_paths = []
     for audio_file in file_paths:
-        run_separation_custom(audio_file)
-    print('Done')
+        output_paths.extend(separated_output_paths(audio_file, args.model))
+        # run_separation_custom(audio_file, args.model)
+    print(colored('Separated files \n' + '\n'.join(output_paths), "green"))
+    return output_paths
 
 
 if __name__ == "__main__":

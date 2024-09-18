@@ -25,7 +25,9 @@ dependencies = [
   "scipy",
   "librosa",
   "msgpack",
-  "demucs"
+  "demucs",
+  "termcolor",
+  "colorama"
 ]
 
 [tool.setuptools]

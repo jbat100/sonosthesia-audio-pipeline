@@ -12,6 +12,8 @@ sonosthesia-bake = "sonosthesia-audio-pipeline:analysis_entry_point"
 sonosthesia-preview = "sonosthesia-audio-pipeline:preview_entry_point"
 ```
 
+To get termcolor colors in pycharm see [here](https://stackoverflow.com/questions/76764301/what-should-i-do-to-make-termcolor-work-in-pycharm)
+
 ## Dependencies
 
 - matplotlib >=3.9
