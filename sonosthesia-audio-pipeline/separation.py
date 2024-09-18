@@ -7,6 +7,7 @@ from colorama import just_fix_windows_console
 from termcolor import colored
 from setup import input_to_filepaths
 
+SEPARATION_DESCRIPTION = 'Audio separation using demucs.'
 
 just_fix_windows_console()
 
@@ -45,15 +46,12 @@ def separated_output_paths(audio_file, model):
 
 def configure_separation_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
-                        help='path to the file or directory')
+                        help='path to the audio file or directory')
     parser.add_argument('-n', '--model', type=str, default='mdx_extra',
                         help='demucs model used for the separation')
 
 
-def separation():
-    parser = argparse.ArgumentParser(description='Audio separation using demucs.')
-    configure_separation_parser(parser)
-    args = parser.parse_args()
+def separation_with_args(args):
     file_paths = input_to_filepaths(args.input)
     output_paths = []
     for audio_file in file_paths:
@@ -61,6 +59,13 @@ def separation():
         # run_separation_custom(audio_file, args.model)
     print(colored('Separated files \n' + '\n'.join(output_paths), "green"))
     return output_paths
+
+
+def separation():
+    parser = argparse.ArgumentParser(description=SEPARATION_DESCRIPTION)
+    configure_separation_parser(parser)
+    args = parser.parse_args()
+    separation_with_args(args)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@ https://github.com/pypa/sampleproject/blob/main/pyproject.toml
 
 # Build
 
+## How to build and publish
+
 ## CLI Commands
 
 Can't get this to work
@@ -23,6 +25,8 @@ To get termcolor colors in pycharm see [here](https://stackoverflow.com/question
 
 # Analysis
 
+Under consideration for deeper analysis 
+
 ## Essentia
 
 ### Algorithms 
@@ -41,7 +45,7 @@ https://essentia.upf.edu/reference/std_LowLevelSpectralExtractor.html
 
 LowLevelSpectralExtractor is very thorough
 
-# Extractors
+### Extractors
 
 https://essentia.upf.edu/freesound_extractor.html
 

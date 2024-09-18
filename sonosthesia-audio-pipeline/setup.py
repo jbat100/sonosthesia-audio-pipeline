@@ -20,11 +20,11 @@ def parse_configuration():
     args = parser.parse_args()
 
 
-def input_to_filepaths(input_path):
+def input_to_filepaths(input_path, extensions):
     # If the specified path is a directory, get absolute file paths of all files in the directory
     if os.path.isdir(input_path):
         file_paths = [os.path.abspath(os.path.join(input_path, file)) for file in os.listdir(input_path)
-                      if file.lower().endswith(('.mp3', '.wav'))]
+                      if file.lower().endswith(extensions)]
     else:
         file_paths = [os.path.abspath(input_path)]
     return file_paths
