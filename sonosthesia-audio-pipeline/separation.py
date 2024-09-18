@@ -5,7 +5,7 @@ import shlex
 
 from colorama import just_fix_windows_console
 from termcolor import colored
-from setup import input_to_filepaths
+from utils import input_to_filepaths, AUDIO_EXTENSIONS
 
 SEPARATION_DESCRIPTION = 'Audio separation using demucs.'
 
@@ -25,7 +25,7 @@ def get_output_directory(audio_file):
 
 def run_separation_custom(audio_file, model):
     output_directory = get_output_directory(audio_file)
-    pattern = "{track}/{track}_{stem}.{ext}"
+    pattern = "{track}_{stem}.{ext}"
     command = f'--mp3 -n {model} --filename {pattern} -o "{output_directory}" "{audio_file}"'
     print(colored("Running separation command : " + command, "blue"))
     demucs.separate.main(shlex.split(command))
@@ -52,11 +52,11 @@ def configure_separation_parser(parser):
 
 
 def separation_with_args(args):
-    file_paths = input_to_filepaths(args.input)
+    file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS)
     output_paths = []
     for audio_file in file_paths:
         output_paths.extend(separated_output_paths(audio_file, args.model))
-        # run_separation_custom(audio_file, args.model)
+        run_separation_custom(audio_file, args.model)
     print(colored('Separated files \n' + '\n'.join(output_paths), "green"))
     return output_paths
 

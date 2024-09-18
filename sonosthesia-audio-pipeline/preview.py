@@ -4,8 +4,7 @@ import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 
-from setup import input_to_filepaths
-from utils import normalize_array_01, clip_bin_signal
+from utils import input_to_filepaths, normalize_array_01, clip_bin_signal
 
 
 # Offsets of interest

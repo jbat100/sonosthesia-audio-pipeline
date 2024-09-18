@@ -1,21 +1,18 @@
 import argparse
 import collections
-import os
-import struct
-
 import librosa.display
 import librosa.feature
-import matplotlib.pyplot as plt
-import msgpack
 import numpy as np
 
 from scipy.signal import butter, sosfilt
 from colorama import just_fix_windows_console
 from termcolor import colored
-from setup import input_to_filepaths
-from utils import change_extension, remap
 
-ANALYSIS_DESCRIPTION = 'Analyse an audio file or display an analysis file.'
+from utils import (input_to_filepaths, change_extension, remap,
+                   AUDIO_EXTENSIONS, ANALYSIS_VERSION, CHANNEL_KEYS,
+                   write_packed_with_header, audio_analysis_description, signal_analysis_description)
+
+ANALYSIS_DESCRIPTION = 'Analyse an audio file and write to .axd file.'
 
 # using msgpack with nested named tuples is a bit of a pain especially for compatibility with other environments
 
@@ -24,15 +21,6 @@ ContinuousData = collections.namedtuple('ContinuousData', ['time', 'rms', 'lows'
 AudioAnalysis = collections.namedtuple('AudioAnalysis', ['continuous', 'peaks'])
 PeakData = collections.namedtuple('PeakData', ['channel', 'start', 'duration', 'magnitude', 'strength'])
 
-ANALYSIS_VERSION = 2
-AUDIO_EXTENSIONS = ['.wav', '.mp3']
-
-CHANNEL_KEYS = {
-    0: 'rms',
-    1: 'lows',
-    2: 'mids',
-    3: 'highs'
-}
 
 just_fix_windows_console()
 
@@ -72,37 +60,6 @@ def get_rms(y):
     return rms
 
 
-def write_packed_with_header(data, header, file_path):
-    if len(header) != 3:
-        raise ValueError("header_integers must contain exactly three 32-bit integers")
-    # Pack the header integers as 32-bit (4 bytes) integers
-    header_packed = struct.pack('iii', *header)  # 'iii' means 3 int32 values
-    packed_data = msgpack.packb(data, use_bin_type=True)
-    combined_data = header_packed + packed_data
-    print(f'Packed {len(data.continuous)} continuous data points and {len(data.peaks)} peaks into {len(combined_data)} '
-          f'bytes, written to {file_path} with header {header}')
-    with open(file_path, 'wb') as file:
-        file.write(combined_data)
-
-
-def read_packed_with_header(file_path):
-    # Open the file in binary read mode
-    with open(file_path, 'rb') as file:
-        # Read the header: 3 x 32-bit integers (12 bytes total)
-        header_packed = file.read(12)
-        if len(header_packed) != 12:
-            raise ValueError("File is too short to contain a valid header")
-        # Unpack the header: 'iii' means 3 int32 values
-        header = struct.unpack('iii', header_packed)
-        # Read the remaining data (msgpack data)
-        packed_data = file.read()
-        if not packed_data:
-            raise ValueError("No data found after header")
-        # Unpack the msgpack data
-        data = msgpack.unpackb(packed_data, raw=False)
-    return header, data
-
-
 def run_band_analysis(data, sr, band, channel):
     y = butter_bandpass_filter(data, band[0], band[1], sr, order=5)
     return run_signal_analysis(y, sr, channel)
@@ -112,19 +69,6 @@ def run_signal_analysis(y, sr, channel):
     rms = get_rms(y)
     peaks = get_peaks(y, sr, rms, channel)
     return SignalAnalysis(rms, peaks)
-
-
-def signal_analysis_description(signal_analysis):
-    rms_max = np.max(signal_analysis.rms)
-    rms_min = np.min(signal_analysis.rms)
-    num_peaks = len(signal_analysis.peaks)
-    return f'SignalAnalysis with rms range ({rms_min} : {rms_max}) and {num_peaks} peaks'
-
-
-def audio_analysis_description(audio_analysis):
-    continuous = audio_analysis['continuous']
-    peaks = audio_analysis['peaks']
-    return f'AudioAnalysis with {len(continuous)} continuous data points and {len(peaks)} peaks'
 
 
 def run_audio_analysis(y, sr, low_band, mid_band, high_band):
@@ -177,52 +121,6 @@ def run_analysis(file_path, start, duration):
     write_packed_with_header(audio_analysis._asdict(), [ANALYSIS_VERSION, 0, 0], change_extension(file_path, '.xad'))
 
 
-def remap_dbs(array):
-    return remap(array, -40, -5, 0, 1)
-
-
-def plot_rms(continuous, extractor, label, ax):
-    times = [data['time'] for data in continuous]
-    values = remap_dbs(np.array([extractor(data) for data in continuous]))
-    ax.plot(times, values, label=label)
-    ax.legend()
-
-
-def plot_peaks(peaks, channel, label, ax):
-    channel_peaks = [peak for peak in peaks if peak['channel'] == channel]
-    count = len(channel_peaks)
-    times = [peak['start'] for peak in channel_peaks]
-    magnitudes = remap_dbs(np.array([peak['magnitude'] for peak in channel_peaks]))
-    strengths = [peak['strength'] for peak in channel_peaks]
-    ax.vlines(times, 0, magnitudes, color='r', alpha=0.9, linestyle='--', label=f'{label} magnitudes')
-    ax.scatter(times, strengths, color='g', marker='o', label=f'{label} strengths')
-
-
-def plot_analysis(continuous, peaks, channel, ax1, ax2):
-    key = CHANNEL_KEYS[channel]
-    plot_rms(continuous, lambda d: d[key], key.capitalize(), ax1)
-    plot_peaks(peaks, channel, key.capitalize(), ax2)
-
-
-def load_analysis(file_path, start, duration):
-    end = float('inf') if duration is None else start + duration
-    header, data = read_packed_with_header(file_path)
-    print(colored(f'Loaded analysis file from {file_path} read header {header}', "green"))
-    print(colored(f'Found : {audio_analysis_description(data)}', "grey"))
-    continuous = [point for point in data['continuous'] if start <= point['time'] <= end]
-    peaks = [peak for peak in data['peaks'] if start <= peak['start'] <= end]
-    if len(continuous) == len(peaks) == 0:
-        print(colored('No data to plot', "red"))
-        return
-    print(colored(f'Plotting : {len(continuous)} continuous analysis points and {len(peaks)} peaks', "blue"))
-    fig, ax = plt.subplots(nrows=8, sharex=True)
-    plot_analysis(continuous, peaks, 0, ax[0], ax[1])
-    plot_analysis(continuous, peaks, 1, ax[2], ax[3])
-    plot_analysis(continuous, peaks, 2, ax[4], ax[5])
-    plot_analysis(continuous, peaks, 3, ax[6], ax[7])
-    plt.show()
-
-
 def configure_analysis_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
                         help='path to the file (.wav, .mp3, .xad) or directory')
@@ -235,13 +133,7 @@ def configure_analysis_parser(parser):
 def analysis_with_args(args):
     file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS)
     for file_path in file_paths:
-        _, ext = os.path.splitext(file_path)
-        if ext.lower() in AUDIO_EXTENSIONS:
-            run_analysis(file_path, args.start, args.duration)
-        elif ext.lower() == '.xad':
-            load_analysis(file_path, args.start, args.duration)
-        else:
-            print(colored(f'Skipped file : {file_path}', "yellow"))
+        run_analysis(file_path, args.start, args.duration)
     print('Done')
 
 

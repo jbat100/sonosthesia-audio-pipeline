@@ -2,6 +2,14 @@ https://github.com/pypa/sampleproject/blob/main/pyproject.toml
 
 # Build
 
+## Use a virtual environment 
+
+Create one at the root of the repo using
+
+```
+python3 -m venv venv
+```
+
 ## How to build and publish
 
 ## CLI Commands
