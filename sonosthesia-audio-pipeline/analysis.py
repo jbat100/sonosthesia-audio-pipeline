@@ -9,10 +9,14 @@ from colorama import just_fix_windows_console
 from termcolor import colored
 
 from utils import (input_to_filepaths, change_extension, remap,
-                   AUDIO_EXTENSIONS, ANALYSIS_VERSION, CHANNEL_KEYS,
-                   write_packed_with_header, audio_analysis_description, signal_analysis_description)
+                   AUDIO_EXTENSIONS, ANALYSIS_VERSION, ANALYSIS_EXTENSION,
+                   write_packed_with_header, signal_analysis_description)
 
 ANALYSIS_DESCRIPTION = 'Analyse an audio file and write to .axd file.'
+
+LOW_BAND = [30, 100]
+MID_BAND = [500, 2000]
+HIGH_BAND = [4000, 16000]
 
 # using msgpack with nested named tuples is a bit of a pain especially for compatibility with other environments
 
@@ -117,13 +121,14 @@ def run_analysis(file_path, start, duration):
     num_samples = y.shape[0] 
     duration = num_samples / sr
     print(colored(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}'), "green")
-    audio_analysis = run_audio_analysis(y, sr, [30, 200], [500, 2000], [4000, 16000])
-    write_packed_with_header(audio_analysis._asdict(), [ANALYSIS_VERSION, 0, 0], change_extension(file_path, '.xad'))
+    audio_analysis = run_audio_analysis(y, sr, LOW_BAND, MID_BAND, HIGH_BAND)
+    analysis_path = change_extension(file_path, ANALYSIS_EXTENSION)
+    write_packed_with_header(audio_analysis._asdict(), [ANALYSIS_VERSION, 0, 0], analysis_path)
 
 
 def configure_analysis_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
-                        help='path to the file (.wav, .mp3, .xad) or directory')
+                        help=f'path to the file ({",".join(AUDIO_EXTENSIONS)}) or directory')
     parser.add_argument('-s', '--start', type=float, default=0.0,
                         help='start time in seconds')
     parser.add_argument('-d', '--duration', type=float, default=None,

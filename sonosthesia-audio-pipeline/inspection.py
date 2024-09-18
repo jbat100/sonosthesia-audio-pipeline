@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from colorama import just_fix_windows_console
 from termcolor import colored
-from utils import (input_to_filepaths, change_extension, remap,
-                   AUDIO_EXTENSIONS, ANALYSIS_VERSION, CHANNEL_KEYS,
+from utils import (input_to_filepaths, remap,
+                   ANALYSIS_VERSION, CHANNEL_KEYS, ANALYSIS_EXTENSION,
                    read_packed_with_header, audio_analysis_description)
 
 INSPECTION_DESCRIPTION = 'Inspect an analysis file.'
@@ -25,7 +25,6 @@ def plot_rms(continuous, extractor, label, ax):
 
 def plot_peaks(peaks, channel, label, ax):
     channel_peaks = [peak for peak in peaks if peak['channel'] == channel]
-    count = len(channel_peaks)
     times = [peak['start'] for peak in channel_peaks]
     magnitudes = remap_dbs(np.array([peak['magnitude'] for peak in channel_peaks]))
     strengths = [peak['strength'] for peak in channel_peaks]
@@ -42,6 +41,8 @@ def plot_analysis(continuous, peaks, channel, ax1, ax2):
 def load_analysis(file_path, start, duration):
     end = float('inf') if duration is None else start + duration
     header, data = read_packed_with_header(file_path)
+    if header[0] != ANALYSIS_VERSION:
+        raise ValueError(f"Unexpected version {header[0]}, required {ANALYSIS_VERSION}")
     print(colored(f'Loaded analysis file from {file_path} read header {header}', "green"))
     print(colored(f'Found : {audio_analysis_description(data)}', "grey"))
     continuous = [point for point in data['continuous'] if start <= point['time'] <= end]
@@ -60,7 +61,7 @@ def load_analysis(file_path, start, duration):
 
 def configure_inspection_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
-                        help='path to an .xad file or directory')
+                        help=f'path to an analysis {ANALYSIS_EXTENSION} file or directory')
     parser.add_argument('-s', '--start', type=float, default=0.0,
                         help='start time in seconds')
     parser.add_argument('-d', '--duration', type=float, default=None,

@@ -6,6 +6,8 @@ import msgpack
 from colorama import just_fix_windows_console
 from termcolor import colored
 
+ANALYSIS_EXTENSION = '.xad'
+
 AUDIO_EXTENSIONS = ['.wav', '.mp3']
 
 ANALYSIS_VERSION = 2
