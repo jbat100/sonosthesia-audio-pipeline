@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "continuous": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number"
+          },
+          "rms": {
+            "type": "number"
+          },
+          "lows": {
+            "type": "number"
+          },
+          "mids": {
+            "type": "number"
+          },
+          "highs": {
+            "type": "number"
+          },
+          "centroid": {
+            "type": "number"
+          }
+        },
+        "required": ["time", "rms", "lows", "mids", "highs", "centroid"]
+      }
+    },
+    "peaks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "integer"
+          },
+          "start": {
+            "type": "number"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "magnitude": {
+            "type": "number"
+          },
+          "strength": {
+            "type": "number"
+          }
+        },
+        "required": ["channel", "start", "duration", "magnitude", "strength"]
+      }
+    }
+  },
+  "required": ["continuous", "peaks"]
+}
