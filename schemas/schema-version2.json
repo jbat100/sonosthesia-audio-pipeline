@@ -1,4 +1,5 @@
 {
+  "$id": "https://github.com/jbat100/sonosthesia-audio-pipeline/blob/dev/schemas/schema-version2.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
