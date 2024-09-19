@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import os
 import struct
@@ -6,7 +7,9 @@ import msgpack
 from colorama import just_fix_windows_console
 from termcolor import colored
 
-ANALYSIS_EXTENSION = '.xad'
+MSGPACK_ANALYSIS_EXTENSION = '.xad'
+JSON_ANALYSIS_EXTENSION = '.json'
+JSON_TYPE_CHECK = 'sonosthesia-audio-pipeline'
 
 AUDIO_EXTENSIONS = ['.wav', '.mp3']
 
@@ -18,6 +21,8 @@ CHANNEL_KEYS = {
     2: 'mids',
     3: 'highs'
 }
+
+just_fix_windows_console()
 
 
 def audio_analysis_description(audio_analysis):
@@ -33,14 +38,38 @@ def signal_analysis_description(signal_analysis):
     return f'SignalAnalysis with rms range ({rms_min} : {rms_max}) and {num_peaks} peaks'
 
 
+def write_json_with_header(data, header, file_path):
+    json_data = json.dumps({
+        "type": JSON_TYPE_CHECK,
+        "header": header,
+        "content": data
+    }, indent=2)
+    print(colored(f'Serialized data to json string with length{len(json_data)}, written to {file_path} '
+                  f'with header {header}',"green"))
+    with open(file_path, 'w') as file:
+        file.write(json_data)
+
+
+def read_json_with_header(file_path):
+    with open(file_path, 'r') as file:
+        json_data = json.load(file)
+    if json_data['type'] != JSON_TYPE_CHECK:
+        raise ValueError(f"Expected type field with value {JSON_TYPE_CHECK}")
+    header = json_data['header']
+    print(colored(f'Loaded json data from {file_path} with header {header}',"green"))
+    check_header(header)
+    data = json_data['content']
+    return header, data
+
+
 def write_packed_with_header(data, header, file_path):
     if len(header) != 3:
-        raise ValueError("header_integers must contain exactly three 32-bit integers")
+        raise ValueError("Header must contain exactly three 32-bit integers")
     # Pack the header integers as 32-bit (4 bytes) integers
     header_packed = struct.pack('iii', *header)  # 'iii' means 3 int32 values
     packed_data = msgpack.packb(data, use_bin_type=True)
     combined_data = header_packed + packed_data
-    print(colored(f'Packed data points into {len(combined_data)} bytes, written to {file_path} with header {header}',"green"))
+    print(colored(f'Packed data into {len(combined_data)} bytes, written to {file_path} with header {header}',"green"))
     with open(file_path, 'wb') as file:
         file.write(combined_data)
 
@@ -54,13 +83,20 @@ def read_packed_with_header(file_path):
             raise ValueError("File is too short to contain a valid header")
         # Unpack the header: 'iii' means 3 int32 values
         header = struct.unpack('iii', header_packed)
+        check_header(header)
         # Read the remaining data (msgpack data)
         packed_data = file.read()
         if not packed_data:
             raise ValueError("No data found after header")
         # Unpack the msgpack data
         data = msgpack.unpackb(packed_data, raw=False)
+        print(colored(f'Unpacked {len(packed_data)} data bytes from {file_path} with header {header}', "green"))
     return header, data
+
+
+def check_header(header):
+    if header[0] != ANALYSIS_VERSION:
+        raise ValueError(f"Unexpected version {header[0]}, supported is {ANALYSIS_VERSION}")
 
 
 def input_to_filepaths(input_path, extensions):

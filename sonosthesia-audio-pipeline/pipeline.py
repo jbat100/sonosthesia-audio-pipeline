@@ -10,9 +10,10 @@ from analysis import analysis_with_args, input_to_filepaths, AUDIO_EXTENSIONS
 PIPELINE_DESCRIPTION = 'Chain source separation and analyse original audio as well as separated sources'
 
 SeparationArgs = collections.namedtuple('SeparationArgs', ['input', 'model'])
-AnalysisArgs = collections.namedtuple('AnalysisArgs', ['input', 'start', 'duration'])
+AnalysisArgs = collections.namedtuple('AnalysisArgs', ['input', 'start', 'duration', 'json'])
 
 just_fix_windows_console()
+
 
 def configure_pipeline_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
@@ -21,6 +22,8 @@ def configure_pipeline_parser(parser):
                         help='demucs model used for the separation')
     parser.add_argument('-o', '--overwrite', action='store_true',
                         help='overwrite existing separated files')
+    parser.add_argument('-j', '--json', action='store_true',
+                        help='write output to json')
 
 
 def pipeline_with_args(args):
@@ -39,7 +42,7 @@ def pipeline_with_args(args):
     # Perform analysis on both input and separated audio files
     audio_paths = input_paths + separated_paths
     for audio_path in audio_paths:
-        analysis_with_args(AnalysisArgs(audio_path, 0.0, None))
+        analysis_with_args(AnalysisArgs(audio_path, 0.0, None, args.json))
 
 
 def pipeline():

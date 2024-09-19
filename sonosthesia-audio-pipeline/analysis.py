@@ -9,8 +9,8 @@ from colorama import just_fix_windows_console
 from termcolor import colored
 
 from utils import (input_to_filepaths, change_extension, remap,
-                   AUDIO_EXTENSIONS, ANALYSIS_VERSION, ANALYSIS_EXTENSION,
-                   write_packed_with_header, signal_analysis_description)
+                   AUDIO_EXTENSIONS, ANALYSIS_VERSION, MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION,
+                   write_packed_with_header, write_json_with_header, signal_analysis_description)
 
 ANALYSIS_DESCRIPTION = 'Analyse an audio file and write to .axd file.'
 
@@ -116,14 +116,18 @@ def run_audio_analysis(y, sr, low_band, mid_band, high_band):
     return AudioAnalysis(continuous_dicts, peak_dicts)
 
 
-def run_analysis(file_path, start, duration):
+def run_analysis(file_path, start, duration, write_json):
     y, sr = librosa.load(file_path, sr=None, offset=start, duration=duration)
     num_samples = y.shape[0] 
     duration = num_samples / sr
     print(colored(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}'), "green")
     audio_analysis = run_audio_analysis(y, sr, LOW_BAND, MID_BAND, HIGH_BAND)
-    analysis_path = change_extension(file_path, ANALYSIS_EXTENSION)
-    write_packed_with_header(audio_analysis._asdict(), [ANALYSIS_VERSION, 0, 0], analysis_path)
+    msgpack_analysis_path = change_extension(file_path, MSGPACK_ANALYSIS_EXTENSION)
+    audio_analysis_dict = audio_analysis._asdict()
+    write_packed_with_header(audio_analysis_dict, [ANALYSIS_VERSION, 0, 0], msgpack_analysis_path)
+    if write_json:
+        json_analysis_path = change_extension(file_path, JSON_ANALYSIS_EXTENSION)
+        write_json_with_header(audio_analysis_dict, [ANALYSIS_VERSION, 0, 0], json_analysis_path)
 
 
 def configure_analysis_parser(parser):
@@ -133,6 +137,8 @@ def configure_analysis_parser(parser):
                         help='start time in seconds')
     parser.add_argument('-d', '--duration', type=float, default=None,
                         help='duration in seconds')
+    parser.add_argument('-j', '--json', action='store_true',
+                        help='write output to json')
 
 
 def analysis_with_args(args):

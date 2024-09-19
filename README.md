@@ -1,35 +1,18 @@
 # sonosthesia-audio-pipeline
 
-Python (Librosa) based tooling to analyse audio files and write results to file for use in realtime visualization apps. Results can be written using Message Pack or raw binary float arrays for efficient (de)serialization. Readers are provided for the Unity timeline, to be used alongside the original audio files.
+Python based tooling to analyse audio files and write results to file for use in realtime visualization apps. Results can be written using Message Pack for efficient (de)serialization. Readers are provided for the Unity timeline, to be used alongside the original audio files.
 
 
 # Installation
 
-## Windows
+Installation requires python (version 3.9 to 3.12 are supported). Once you have python you can run
 
-Currently the easiest way to get started is to install the latest python `3.12.x` (do not use the `3.13.x` pre-releases), follow instructions [here](https://www.python.org/downloads/release/python-3126/).
-
-Open the command prompt, cd into the root directory of this repository, then create a virtual environment by running
-
-```python -m venv venv```
-
-Activate the virtual environment by running
-
-```venv\Scripts\activate```
-
-Install pip dependencies
-
-```pip install librosa matplotlib msgpack```
-
-If you wan to run source seperation you will need to install 
-
-```pip install demucs```
-
+```pip install sonosthesia-audio-pipeline```
 
 
 # Python Pipeline
 
-## Analysis with librosa
+## Sound Analysis
 
 Librosa is used to extract audio features which are of particular interest for driving reactive visuals, notably:
 
@@ -58,9 +41,7 @@ There is a preview mode which uses matplotlib to present analysis data
 ![kepler](https://github.com/jbat100/sonosthesia-audio-pipeline/assets/1318918/aa2ef61a-0c2f-409c-8e7d-be3f6c92c8ed)
 
 
-## Planed
-
-Compare source separation using frameworks such as [Open-Unmix](https://github.com/sigsep/open-unmix-pytorch), [Demucs](https://github.com/adefossez/demucs) or [Spleeter](https://github.com/deezer/spleeter).
+## Source Separation
 
 Currently using [Demucs](https://github.com/adefossez/demucs) because it seems to score better on overall SDR and is a lot easier to install with pip than Spleeter.
 

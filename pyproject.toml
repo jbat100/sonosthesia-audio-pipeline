@@ -27,7 +27,8 @@ dependencies = [
   "msgpack",
   "demucs",
   "termcolor",
-  "colorama"
+  "colorama",
+  "jsonschema"
 ]
 
 [tool.setuptools]
