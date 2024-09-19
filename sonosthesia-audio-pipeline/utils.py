@@ -67,7 +67,7 @@ def input_to_filepaths(input_path, extensions):
     # If the specified path is a directory, get absolute file paths of all files in the directory
     if os.path.isdir(input_path):
         file_paths = [os.path.abspath(os.path.join(input_path, file)) for file in os.listdir(input_path)
-                      if file.lower().endswith(extensions)]
+                      if file.lower().endswith(tuple(extensions))]
     else:
         file_paths = [os.path.abspath(input_path)]
     return file_paths
