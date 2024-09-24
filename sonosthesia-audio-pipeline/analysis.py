@@ -22,9 +22,14 @@ HIGH_BAND = [4000, 16000]
 
 SignalAnalysis = collections.namedtuple('SignalAnalysis', ['rms', 'peaks'])
 ContinuousData = collections.namedtuple('ContinuousData', ['time', 'rms', 'lows', 'mids', 'highs', 'centroid'])
-AudioAnalysis = collections.namedtuple('AudioAnalysis', ['continuous', 'peaks'])
+AudioAnalysis = collections.namedtuple('AudioAnalysis', ['continuous', 'peaks', 'info'])
 PeakData = collections.namedtuple('PeakData', ['channel', 'start', 'duration', 'magnitude', 'strength'])
 
+# info tuples used to provide information on the analysis settings and statistics
+
+RangeInfo = collections.namedtuple('RangeInfo', ['lower', 'upper'])
+SignalInfo = collections.namedtuple('BandInfo', ['band', 'magnitude', 'peaks'])
+AnalysisInfo = collections.namedtuple('AnalysisInfo', ['duration', 'main', 'lows', 'mids', 'highs', 'centroid'])
 
 just_fix_windows_console()
 
@@ -75,6 +80,19 @@ def run_signal_analysis(y, sr, channel):
     return SignalAnalysis(rms, peaks)
 
 
+def signal_analysis_info(signal_analysis, band):
+    rms_max = float(np.max(signal_analysis.rms))
+    rms_min = float(np.min(signal_analysis.rms))
+    num_peaks = len(signal_analysis.peaks)
+    return SignalInfo(RangeInfo(float(band[0]), float(band[1]))._asdict(),
+                      RangeInfo(rms_min, rms_max)._asdict(),
+                      num_peaks)._asdict()
+
+
+def range_info(array):
+    return RangeInfo(float(np.min(array)), float(np.max(array)))._asdict()
+
+
 def run_audio_analysis(y, sr, low_band, mid_band, high_band):
 
     peaks = []
@@ -84,21 +102,28 @@ def run_audio_analysis(y, sr, low_band, mid_band, high_band):
     peaks.extend(analysis_main.peaks)
     cent = librosa.feature.spectral_centroid(y=y, sr=sr).ravel()
     print(colored(f'Main analysis : {signal_analysis_description(analysis_main)}', "light_grey"))
+    main_info = signal_analysis_info(analysis_main, [20, 8000])
+    cent_info = range_info(cent)
 
     analysis_lows = run_band_analysis(y, sr, low_band, 1)
     peaks.extend(analysis_lows.peaks)
     print(colored(f'Lows analysis : {signal_analysis_description(analysis_lows)}', "light_grey"))
+    lows_info = signal_analysis_info(analysis_lows, low_band)
 
     analysis_mids = run_band_analysis(y, sr, mid_band, 2)
     peaks.extend(analysis_mids.peaks)
     print(colored(f'Mids analysis : {signal_analysis_description(analysis_mids)}', "light_grey"))
+    mids_info = signal_analysis_info(analysis_mids, mid_band)
 
     analysis_highs = run_band_analysis(y, sr, high_band, 3)
     peaks.extend(analysis_highs.peaks)
     print(colored(f'Highs analysis : {signal_analysis_description(analysis_highs)}', "light_grey"))
+    highs_info = signal_analysis_info(analysis_highs, high_band)
 
     sorted_peaks = sorted(peaks, key=lambda p: p.start)
     count = len(times)
+
+    analysis_info = AnalysisInfo(times[-1], main_info, lows_info, mids_info, highs_info, cent_info)._asdict()
 
     continuous_dicts = []
     for frame in range(count):
@@ -112,8 +137,14 @@ def run_audio_analysis(y, sr, low_band, mid_band, high_band):
         })
     peak_dicts = []
     for peak in sorted_peaks:
-        peak_dicts.append(peak._asdict())
-    return AudioAnalysis(continuous_dicts, peak_dicts)
+        peak_dicts.append({
+            'channel': int(peak.channel),
+            'start': float(peak.start),
+            'duration': float(peak.duration),
+            'magnitude': float(peak.magnitude),
+            'strength': float(peak.strength),
+        })
+    return AudioAnalysis(continuous_dicts, peak_dicts, analysis_info)._asdict()
 
 
 def run_analysis(file_path, start, duration, write_json):
@@ -123,7 +154,7 @@ def run_analysis(file_path, start, duration, write_json):
     print(colored(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}'), "green")
     audio_analysis = run_audio_analysis(y, sr, LOW_BAND, MID_BAND, HIGH_BAND)
     msgpack_analysis_path = change_extension(file_path, MSGPACK_ANALYSIS_EXTENSION)
-    audio_analysis_dict = audio_analysis._asdict()
+    audio_analysis_dict = audio_analysis
     write_packed_with_header(audio_analysis_dict, [ANALYSIS_VERSION, 0, 0], msgpack_analysis_path)
     if write_json:
         json_analysis_path = change_extension(file_path, JSON_ANALYSIS_EXTENSION)
@@ -144,7 +175,7 @@ def configure_analysis_parser(parser):
 def analysis_with_args(args):
     file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS)
     for file_path in file_paths:
-        run_analysis(file_path, args.start, args.duration)
+        run_analysis(file_path, args.start, args.duration, args.json)
     print('Done')
 
 

@@ -68,10 +68,63 @@
             },
             "required": ["channel", "start", "duration", "magnitude", "strength"]
           }
+        },
+        "info": {
+          "type": "object",
+          "properties": {
+            "duration": {
+              "type": "number"
+            },
+            "main": {
+              "$ref": "#/definitions/bandMagnitudePeaks"
+            },
+            "lows": {
+              "$ref": "#/definitions/bandMagnitudePeaks"
+            },
+            "mids": {
+              "$ref": "#/definitions/bandMagnitudePeaks"
+            },
+            "highs": {
+              "$ref": "#/definitions/bandMagnitudePeaks"
+            },
+            "centroid": {
+              "$ref": "#/definitions/range"
+            }
+          },
+          "required": ["duration", "main", "lows", "mids", "highs", "centroid"]
         }
       },
-      "required": ["continuous", "peaks"]
+      "required": ["continuous", "peaks", "info"]
     }
   },
-  "required": ["type", "header", "content"]
+  "required": ["type", "header", "content"],
+  "definitions": {
+    "range": {
+      "type": "object",
+      "properties": {
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        }
+      },
+      "required": ["lower", "upper"]
+    },
+    "bandMagnitudePeaks": {
+      "type": "object",
+      "properties": {
+        "band": {
+          "$ref": "#/definitions/range"
+        },
+        "magnitude": {
+          "$ref": "#/definitions/range"
+        },
+        "peaks": {
+          "type": "integer"
+        }
+      },
+      "required": ["band", "magnitude", "peaks"]
+    }
+  }
 }

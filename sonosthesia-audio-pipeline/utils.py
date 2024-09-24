@@ -44,7 +44,7 @@ def write_json_with_header(data, header, file_path):
         "header": header,
         "content": data
     }, indent=2)
-    print(colored(f'Serialized data to json string with length{len(json_data)}, written to {file_path} '
+    print(colored(f'Serialized data to json string with length {len(json_data)}, written to {file_path} '
                   f'with header {header}',"green"))
     with open(file_path, 'w') as file:
         file.write(json_data)
