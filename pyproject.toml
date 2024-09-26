@@ -3,8 +3,8 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sonosthesia-audio-pipeline"
-version = "0.0.1"
+name = "sonosthesia_audio_pipeline"
+version = "0.0.9"
 authors = [
   { name="Sonosthesia", email="jonathan@sonosthesia.com" },
 ]
@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["sonosthesia-audio-pipeline"]
+packages = ["sonosthesia_audio_pipeline"]
 
 [project.urls]
 "Homepage" = "https://github.com/jbat100/sonosthesia-audio-pipeline"

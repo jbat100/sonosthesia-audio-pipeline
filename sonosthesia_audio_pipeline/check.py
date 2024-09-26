@@ -7,7 +7,7 @@ from jsonschema import validate
 from colorama import just_fix_windows_console
 from termcolor import colored
 
-from utils import (JSON_ANALYSIS_EXTENSION, MSGPACK_ANALYSIS_EXTENSION,
+from sonosthesia_audio_pipeline.utils import (JSON_ANALYSIS_EXTENSION, MSGPACK_ANALYSIS_EXTENSION,
                    input_to_filepaths, read_packed_with_header)
 
 CHECK_DESCRIPTION = "Check an analysis file against a schema"

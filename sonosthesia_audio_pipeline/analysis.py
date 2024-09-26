@@ -8,7 +8,7 @@ from scipy.signal import butter, sosfilt
 from colorama import just_fix_windows_console
 from termcolor import colored
 
-from utils import (input_to_filepaths, change_extension, remap,
+from sonosthesia_audio_pipeline.utils import (input_to_filepaths, change_extension, remap,
                    AUDIO_EXTENSIONS, ANALYSIS_VERSION, MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION,
                    write_packed_with_header, write_json_with_header, signal_analysis_description)
 
@@ -151,7 +151,7 @@ def run_analysis(file_path, start, duration, write_json):
     y, sr = librosa.load(file_path, sr=None, offset=start, duration=duration)
     num_samples = y.shape[0] 
     duration = num_samples / sr
-    print(colored(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}'), "green")
+    print(colored(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}', "green"))
     audio_analysis = run_audio_analysis(y, sr, LOW_BAND, MID_BAND, HIGH_BAND)
     msgpack_analysis_path = change_extension(file_path, MSGPACK_ANALYSIS_EXTENSION)
     audio_analysis_dict = audio_analysis

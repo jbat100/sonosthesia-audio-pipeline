@@ -3,7 +3,7 @@ import os.path
 
 from colorama import just_fix_windows_console
 
-from utils import (MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION, input_to_filepaths, change_extension,
+from sonosthesia_audio_pipeline.utils import (MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION, input_to_filepaths, change_extension,
                    read_json_with_header, read_packed_with_header, write_json_with_header, write_packed_with_header)
 
 CONVERSION_DESCRIPTION = "Convert between json and msgpack analysis files"

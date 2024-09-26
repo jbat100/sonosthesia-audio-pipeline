@@ -1,5 +1,12 @@
 https://github.com/pypa/sampleproject/blob/main/pyproject.toml
 
+# General python
+
+- Can install python with [chocolatey](https://community.chocolatey.org/packages/python312) or homebrew
+- Note works with Python up to 3.12, issues with 3.13 as both librosa and matplotlib do not support it 
+- Exit command prompt on windows with Ctrl Z and enter
+- Locate interpreter on windows with ```python -c "import os, sys; print(os.path.dirname(sys.executable))"```
+
 # Build
 
 ## Use a virtual environment 

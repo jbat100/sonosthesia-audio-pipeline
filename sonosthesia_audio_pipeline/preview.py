@@ -4,7 +4,7 @@ import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import input_to_filepaths, normalize_array_01, clip_bin_signal
+from sonosthesia_audio_pipeline.utils import input_to_filepaths, normalize_array_01, clip_bin_signal
 
 
 # Offsets of interest

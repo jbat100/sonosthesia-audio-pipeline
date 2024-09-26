@@ -5,7 +5,8 @@ import shlex
 
 from colorama import just_fix_windows_console
 from termcolor import colored
-from utils import input_to_filepaths, AUDIO_EXTENSIONS
+
+from sonosthesia_audio_pipeline.utils import input_to_filepaths, AUDIO_EXTENSIONS
 
 SEPARATION_DESCRIPTION = 'Audio separation using demucs.'
 

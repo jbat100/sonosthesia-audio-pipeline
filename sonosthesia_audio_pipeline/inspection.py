@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from colorama import just_fix_windows_console
 from termcolor import colored
-from utils import (input_to_filepaths, remap,
+
+from sonosthesia_audio_pipeline.utils import (input_to_filepaths, remap,
                    ANALYSIS_VERSION, CHANNEL_KEYS, MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION,
                    read_packed_with_header, read_json_with_header, audio_analysis_description)
 

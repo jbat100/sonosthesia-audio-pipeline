@@ -7,7 +7,7 @@ import msgpack
 from colorama import just_fix_windows_console
 from termcolor import colored
 
-MSGPACK_ANALYSIS_EXTENSION = '.xad'
+MSGPACK_ANALYSIS_EXTENSION = '.xaa'
 JSON_ANALYSIS_EXTENSION = '.json'
 JSON_TYPE_CHECK = 'sonosthesia-audio-pipeline'
 
@@ -104,9 +104,10 @@ def input_to_filepaths(input_path, extensions):
     if os.path.isdir(input_path):
         file_paths = [os.path.abspath(os.path.join(input_path, file)) for file in os.listdir(input_path)
                       if file.lower().endswith(tuple(extensions))]
-    else:
-        file_paths = [os.path.abspath(input_path)]
-    return file_paths
+    elif not input_path.lower().endswith(tuple(extensions)):
+        print(colored(f'{input_path} invalid file extension, expected {", ".join(extensions)}', "red"))
+        return []
+    return [os.path.abspath(input_path)]
 
 
 def remap(array, in_min, in_max, out_min, out_max):

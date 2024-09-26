@@ -4,8 +4,9 @@ import os
 
 from colorama import just_fix_windows_console
 from termcolor import colored
-from separation import separation_with_args, separated_output_paths
-from analysis import analysis_with_args, input_to_filepaths, AUDIO_EXTENSIONS
+
+from sonosthesia_audio_pipeline.separation import separation_with_args, separated_output_paths
+from sonosthesia_audio_pipeline.analysis import analysis_with_args, input_to_filepaths, AUDIO_EXTENSIONS
 
 PIPELINE_DESCRIPTION = 'Chain source separation and analyse original audio as well as separated sources'
 
