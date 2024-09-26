@@ -2,6 +2,7 @@ import argparse
 import os.path
 import demucs.separate
 import shlex
+import ssl
 
 from colorama import just_fix_windows_console
 from termcolor import colored
@@ -14,6 +15,8 @@ just_fix_windows_console()
 
 
 def run_separation(audio_file, model):
+    # trying to address certificate error https://github.com/python-poetry/poetry/issues/5117
+    ssl._create_default_https_context = ssl._create_unverified_context
     demucs.separate.main(shlex.split(f'--mp3 -n {model} "{audio_file}"'))
 
 
