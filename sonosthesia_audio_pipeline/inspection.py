@@ -76,11 +76,13 @@ def configure_inspection_parser(parser):
                         help='duration in seconds')
     parser.add_argument('-j', '--json', action='store_true',
                         help='search .json files when input arg is a directory')
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='recurse through input if directory')
 
 
 def inspection_with_args(args):
     extensions = [JSON_ANALYSIS_EXTENSION] if args.json else [MSGPACK_ANALYSIS_EXTENSION]
-    file_paths = input_to_filepaths(args.input, extensions)
+    file_paths = input_to_filepaths(args.input, extensions, args.recursive)
     for file_path in file_paths:
         load_analysis(file_path, args.start, args.duration)
     print('Done')

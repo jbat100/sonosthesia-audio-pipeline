@@ -65,3 +65,8 @@ LowLevelSpectralExtractor is very thorough
 https://essentia.upf.edu/freesound_extractor.html
 
 https://essentia.upf.edu/streaming_extractor_music.html#music-extractor
+
+# TODO
+
+- Add recursive option for file scan
+- Look into hatch to handle packaging and publishing

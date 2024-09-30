@@ -2,6 +2,7 @@ import argparse
 import os.path
 import demucs.separate
 import shlex
+import ssl
 
 from colorama import just_fix_windows_console
 from termcolor import colored
@@ -14,6 +15,8 @@ just_fix_windows_console()
 
 
 def run_separation(audio_file, model):
+    # trying to address certificate error https://github.com/python-poetry/poetry/issues/5117
+    ssl._create_default_https_context = ssl._create_unverified_context
     demucs.separate.main(shlex.split(f'--mp3 -n {model} "{audio_file}"'))
 
 
@@ -50,10 +53,12 @@ def configure_separation_parser(parser):
                         help='path to the audio file or directory')
     parser.add_argument('-n', '--model', type=str, default='mdx_extra',
                         help='demucs model used for the separation')
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='recurse through input if directory')
 
 
 def separation_with_args(args):
-    file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS)
+    file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS, args.recursive)
     output_paths = []
     for audio_file in file_paths:
         output_paths.extend(separated_output_paths(audio_file, args.model))

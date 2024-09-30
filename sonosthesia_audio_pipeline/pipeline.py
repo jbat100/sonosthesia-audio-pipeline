@@ -10,8 +10,8 @@ from sonosthesia_audio_pipeline.analysis import analysis_with_args, input_to_fil
 
 PIPELINE_DESCRIPTION = 'Chain source separation and analyse original audio as well as separated sources'
 
-SeparationArgs = collections.namedtuple('SeparationArgs', ['input', 'model'])
-AnalysisArgs = collections.namedtuple('AnalysisArgs', ['input', 'start', 'duration', 'json'])
+SeparationArgs = collections.namedtuple('SeparationArgs', ['input', 'model', 'recursive'])
+AnalysisArgs = collections.namedtuple('AnalysisArgs', ['input', 'start', 'duration', 'json', 'recursive'])
 
 just_fix_windows_console()
 
@@ -25,10 +25,12 @@ def configure_pipeline_parser(parser):
                         help='overwrite existing separated files')
     parser.add_argument('-j', '--json', action='store_true',
                         help='write output to json')
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='recurse through input if directory')
 
 
 def pipeline_with_args(args):
-    input_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS)
+    input_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS, args.recursive)
     separated_paths = []
     # Perform separation on input audio files and store separated paths
     for input_path in input_paths:
@@ -39,11 +41,11 @@ def pipeline_with_args(args):
                 description = "\n".join(separated_paths)
                 print(colored(f'Using existing separated files: \n{description}', "green"))
                 continue
-        separated_paths.extend(separation_with_args(SeparationArgs(args.input, args.model)))
+        separated_paths.extend(separation_with_args(SeparationArgs(args.input, args.model, False)))
     # Perform analysis on both input and separated audio files
     audio_paths = input_paths + separated_paths
     for audio_path in audio_paths:
-        analysis_with_args(AnalysisArgs(audio_path, 0.0, None, args.json))
+        analysis_with_args(AnalysisArgs(audio_path, 0.0, None, args.json, False))
 
 
 def pipeline():
