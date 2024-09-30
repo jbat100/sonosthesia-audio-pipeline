@@ -15,7 +15,7 @@ Note that you might need to use the `python3` command rather than `python` depen
 
 Note that the `--input` (shorthand `-i`) can also be a directory in which case files with appropriate extensions will be processed in order.
 
-Use `--help`(shorthand `h`) to get argument list for each of the subcommands. For example 
+Use `--help` (shorthand `h`) to get argument list for each of the subcommands. For example 
 
 ```
 python -m sonosthesia_audio_pipeline analysis -h
@@ -180,7 +180,8 @@ Look into using [Essentia](https://essentia.upf.edu/documentation.html) which se
 
 ## Unity Timeline 
 
-The [com.sonosthesia.audio](https://github.com/jbat100/sonosthesia-unity-packages/tree/main/packages/com.sonosthesia.audio) package provides tooling which allows audio analysis files generated using the Python Pipeline described above to be played alongside corresponding timeline audio through sonosthesia [signals](https://github.com/jbat100/sonosthesia-unity-packages/tree/main/packages/com.sonosthesia.signal) 
+A Unity Timeline reader for analysis files is provided. A demo application is available [here](https://github.com/jbat100/sonosthesia-unity-audio-pipeline)
+
 
 ## Planned
 

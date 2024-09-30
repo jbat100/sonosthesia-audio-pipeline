@@ -99,12 +99,33 @@ def check_header(header):
         raise ValueError(f"Unexpected version {header[0]}, supported is {ANALYSIS_VERSION}")
 
 
-def input_to_filepaths(input_path, extensions):
+def check_any_extension(name, extensions):
+    return any(name.lower().endswith(ext.lower()) for ext in extensions)
+
+
+def get_files_with_extensions(directory, extensions, recursive=True):
+    matched_files = []
+    if recursive:
+        # Walk through the directory tree recursively
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if check_any_extension(file, extensions):
+                    matched_files.append(os.path.abspath(os.path.join(root, file)))
+    else:
+        # Only search in the root directory (non-recursive)
+        for file in os.listdir(directory):
+            file_path = os.path.join(directory, file)
+            # Ensure it's a file and check for extension
+            if os.path.isfile(file_path) and check_any_extension(file, extensions):
+                matched_files.append(os.path.abspath(file_path))
+    return matched_files
+
+
+def input_to_filepaths(input_path, extensions, recursive=False):
     # If the specified path is a directory, get absolute file paths of all files in the directory
     if os.path.isdir(input_path):
-        file_paths = [os.path.abspath(os.path.join(input_path, file)) for file in os.listdir(input_path)
-                      if file.lower().endswith(tuple(extensions))]
-    elif not input_path.lower().endswith(tuple(extensions)):
+        return get_files_with_extensions(input_path, extensions, recursive)
+    elif not check_any_extension(input_path, extensions):
         print(colored(f'{input_path} invalid file extension, expected {", ".join(extensions)}', "red"))
         return []
     return [os.path.abspath(input_path)]

@@ -26,10 +26,13 @@ def run_conversion(file_path):
 def configure_conversion_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
                         help=f'path to file ({MSGPACK_ANALYSIS_EXTENSION} or {JSON_ANALYSIS_EXTENSION}) or directory')
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='recurse through input if directory')
 
 
 def conversion_with_args(args):
-    file_paths = input_to_filepaths(args.input, [MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION])
+    extensions = [MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION]
+    file_paths = input_to_filepaths(args.input, extensions, args.recursive)
     for file_path in file_paths:
         run_conversion(file_path)
     print('Done')

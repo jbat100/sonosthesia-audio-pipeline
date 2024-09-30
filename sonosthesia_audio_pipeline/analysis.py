@@ -170,10 +170,14 @@ def configure_analysis_parser(parser):
                         help='duration in seconds')
     parser.add_argument('-j', '--json', action='store_true',
                         help='write output to json')
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='recurse through input if directory')
 
 
 def analysis_with_args(args):
-    file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS)
+    file_paths = input_to_filepaths(args.input, AUDIO_EXTENSIONS, args.recursive)
+    if len(file_paths) == 0:
+        print(colored(f"No files found at {args.input}", "red"))
     for file_path in file_paths:
         run_analysis(file_path, args.start, args.duration, args.json)
     print('Done')
