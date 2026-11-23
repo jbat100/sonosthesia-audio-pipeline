@@ -18,15 +18,18 @@ Note that the `--input` (shorthand `-i`) can also be a directory in which case f
 Use `--help` (shorthand `h`) to get argument list for each of the subcommands. For example 
 
 ```
-python -m sonosthesia_audio_pipeline analysis -h
+sonosthesia-audio analysis -h
 ```
+
+The `python -m sonosthesia_audio_pipeline` form remains available if a console
+command is not convenient.
 
 ## Anaylysis
 
 Will generate an `.xaa` analysis file alongside the audio file.
 
 ```
-python -m sonosthesia_audio_pipeline analysis -i File.mp3
+sonosthesia-audio analysis -i File.mp3
 ```
 
 
@@ -35,13 +38,13 @@ python -m sonosthesia_audio_pipeline analysis -i File.mp3
 Will create seperated files in a directory with the audio file's name (without extension), nested by demucs separation model type as described [here](https://github.com/adefossez/demucs?tab=readme-ov-file#separating-tracks). The default model is `mdx_extra`.
 
 ```
-python -m sonosthesia_audio_pipeline separation -i File.mp3
+sonosthesia-audio separation -i File.mp3
 ```
 
 To specify another model use `--model` (shorthand `-n`)
 
 ```
-python -m sonosthesia_audio_pipeline separation -i File.mp3 -n mdx
+sonosthesia-audio separation -i File.mp3 -n mdx
 ```
 
 ## Pipeline
@@ -49,7 +52,7 @@ python -m sonosthesia_audio_pipeline separation -i File.mp3 -n mdx
 Pipeline runs the source separation on an audio file, then runs analysis on the original audio file as well as the separated ones
 
 ```
-python -m sonosthesia_audio_pipeline pipeline -i File.mp3
+sonosthesia-audio pipeline -i File.mp3
 ```
 
 
@@ -205,10 +208,10 @@ Primarily used for investigation and debugging purposes. JSON schema available [
 You can convert between formats using 
 
 ```
-python -m sonosthesia_audio_pipeline conversion -i File.xaa
+sonosthesia-audio conversion -i File.xaa
 ```
 
 ```
-python -m sonosthesia_audio_pipeline conversion -i File.json
+sonosthesia-audio conversion -i File.json
 ```
 
