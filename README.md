@@ -24,14 +24,17 @@ sonosthesia-audio analysis -h
 The `python -m sonosthesia_audio_pipeline` form remains available if a console
 command is not convenient.
 
-## Anaylysis
+## Analysis
 
-Will generate an `.xaa` analysis file alongside the audio file.
+Generates an indexed streaming `.xas` analysis file alongside the audio file.
 
 ```
 sonosthesia-audio analysis -i File.mp3
 ```
 
+Use `--format .xaa` for the legacy MessagePack representation or `--format .json`
+for JSON. The `--json` flag can also be used to write JSON alongside the selected
+primary format.
 
 ## Separation 
 
@@ -193,6 +196,14 @@ Planning reader for Unreal Engine and Swift
 
 # Output file specification
 
+## Indexed streaming binary (.xas)
+
+The default output is a chunked, seekable format intended for realtime playback.
+Readers can load only the current chunk and nearby chunks instead of allocating the
+whole analysis. Continuous analysis frames and discrete peak events use separate
+record layouts and indexes. The normative specification is available in
+[schemas/streamingbinary.md](schemas/streamingbinary.md).
+
 ## Binary MsgPack (.xaa)
 
 Header for the file is three 32 bit integers used to determine version and reserved for future use. Rest of the file is message pack data with the following JSON equivalent shema [here](https://github.com/jbat100/sonosthesia-audio-pipeline/blob/main/schemas/msgpack-version2.json)  
@@ -203,15 +214,24 @@ Primarily used for investigation and debugging purposes. JSON schema available [
 
 
 
-## Converting between .xaa and .json
+## Converting between .xas, .xaa and .json
 
-You can convert between formats using 
-
-```
-sonosthesia-audio conversion -i File.xaa
-```
+Select the destination format with `--output-format`:
 
 ```
-sonosthesia-audio conversion -i File.json
+sonosthesia-audio conversion -i File.xaa --output-format .xas
 ```
+
+```
+sonosthesia-audio conversion -i File.xas --output-format .json
+```
+
+```
+sonosthesia-audio conversion -i File.json --output-format .xaa
+```
+
+When converting legacy files to `.xas`, the audio sample rate is inferred from the
+continuous sample spacing. It can be supplied explicitly with `--sample-rate` for
+files with too few samples to infer timing. Omitting `--output-format` retains the
+legacy `.xaa`/`.json` toggle; `.xas` converts to `.json` in that case.
 

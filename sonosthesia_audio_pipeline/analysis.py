@@ -10,9 +10,11 @@ from termcolor import colored
 
 from sonosthesia_audio_pipeline.utils import (input_to_filepaths, change_extension, remap,
                    AUDIO_EXTENSIONS, ANALYSIS_VERSION, MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION,
+                   STREAMING_ANALYSIS_EXTENSION,
                    write_packed_with_header, write_json_with_header, signal_analysis_description)
+from sonosthesia_audio_pipeline.streaming import write_streaming_with_header
 
-ANALYSIS_DESCRIPTION = 'Analyse an audio file and write to .axd file.'
+ANALYSIS_DESCRIPTION = 'Analyse an audio file and write compact indexed analysis data.'
 
 LOW_BAND = [30, 100]
 MID_BAND = [500, 2000]
@@ -147,18 +149,31 @@ def run_audio_analysis(y, sr, low_band, mid_band, high_band):
     return AudioAnalysis(continuous_dicts, peak_dicts, analysis_info)._asdict()
 
 
-def run_analysis(file_path, start, duration, write_json):
+def run_analysis(file_path, start, duration, write_json, output_format=STREAMING_ANALYSIS_EXTENSION):
     y, sr = librosa.load(file_path, sr=None, offset=start, duration=duration)
     num_samples = y.shape[0] 
     duration = num_samples / sr
     print(colored(f'Loaded {file_path}, got {num_samples} samples at rate {sr}, estimated duration is {duration}', "green"))
     audio_analysis = run_audio_analysis(y, sr, LOW_BAND, MID_BAND, HIGH_BAND)
-    msgpack_analysis_path = change_extension(file_path, MSGPACK_ANALYSIS_EXTENSION)
     audio_analysis_dict = audio_analysis
-    write_packed_with_header(audio_analysis_dict, [ANALYSIS_VERSION, 0, 0], msgpack_analysis_path)
-    if write_json:
+    header = [ANALYSIS_VERSION, 0, 0]
+    if output_format == JSON_ANALYSIS_EXTENSION:
         json_analysis_path = change_extension(file_path, JSON_ANALYSIS_EXTENSION)
-        write_json_with_header(audio_analysis_dict, [ANALYSIS_VERSION, 0, 0], json_analysis_path)
+        write_json_with_header(audio_analysis_dict, header, json_analysis_path)
+    elif output_format == MSGPACK_ANALYSIS_EXTENSION:
+        msgpack_analysis_path = change_extension(file_path, MSGPACK_ANALYSIS_EXTENSION)
+        write_packed_with_header(audio_analysis_dict, header, msgpack_analysis_path)
+    elif output_format == STREAMING_ANALYSIS_EXTENSION:
+        streaming_analysis_path = change_extension(file_path, STREAMING_ANALYSIS_EXTENSION)
+        write_streaming_with_header(
+            audio_analysis_dict, header, streaming_analysis_path, sample_rate=sr
+        )
+    else:
+        raise ValueError(f'Unsupported analysis output format: {output_format}')
+
+    if write_json and output_format != JSON_ANALYSIS_EXTENSION:
+        json_analysis_path = change_extension(file_path, JSON_ANALYSIS_EXTENSION)
+        write_json_with_header(audio_analysis_dict, header, json_analysis_path)
 
 
 def configure_analysis_parser(parser):
@@ -169,7 +184,12 @@ def configure_analysis_parser(parser):
     parser.add_argument('-d', '--duration', type=float, default=None,
                         help='duration in seconds')
     parser.add_argument('-j', '--json', action='store_true',
-                        help='write output to json')
+                        help='also write output as JSON')
+    parser.add_argument('-f', '--format',
+                        choices=[STREAMING_ANALYSIS_EXTENSION, MSGPACK_ANALYSIS_EXTENSION,
+                                 JSON_ANALYSIS_EXTENSION],
+                        default=STREAMING_ANALYSIS_EXTENSION,
+                        help='primary analysis output format (default: .xas)')
     parser.add_argument('-r', '--recursive', action='store_true',
                         help='recurse through input if directory')
 
@@ -179,7 +199,13 @@ def analysis_with_args(args):
     if len(file_paths) == 0:
         print(colored(f"No files found at {args.input}", "red"))
     for file_path in file_paths:
-        run_analysis(file_path, args.start, args.duration, args.json)
+        run_analysis(
+            file_path,
+            args.start,
+            args.duration,
+            args.json,
+            getattr(args, 'format', STREAMING_ANALYSIS_EXTENSION),
+        )
     print('Done')
 
 

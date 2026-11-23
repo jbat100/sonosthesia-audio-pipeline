@@ -7,11 +7,15 @@ from termcolor import colored
 
 from sonosthesia_audio_pipeline.separation import separation_with_args, separated_output_paths
 from sonosthesia_audio_pipeline.analysis import analysis_with_args, input_to_filepaths, AUDIO_EXTENSIONS
+from sonosthesia_audio_pipeline.utils import (JSON_ANALYSIS_EXTENSION, MSGPACK_ANALYSIS_EXTENSION,
+                                             STREAMING_ANALYSIS_EXTENSION)
 
 PIPELINE_DESCRIPTION = 'Chain source separation and analyse original audio as well as separated sources'
 
 SeparationArgs = collections.namedtuple('SeparationArgs', ['input', 'model', 'recursive'])
-AnalysisArgs = collections.namedtuple('AnalysisArgs', ['input', 'start', 'duration', 'json', 'recursive'])
+AnalysisArgs = collections.namedtuple(
+    'AnalysisArgs', ['input', 'start', 'duration', 'json', 'recursive', 'format']
+)
 
 just_fix_windows_console()
 
@@ -24,7 +28,12 @@ def configure_pipeline_parser(parser):
     parser.add_argument('-o', '--overwrite', action='store_true',
                         help='overwrite existing separated files')
     parser.add_argument('-j', '--json', action='store_true',
-                        help='write output to json')
+                        help='also write output as JSON')
+    parser.add_argument('-f', '--format',
+                        choices=[STREAMING_ANALYSIS_EXTENSION, MSGPACK_ANALYSIS_EXTENSION,
+                                 JSON_ANALYSIS_EXTENSION],
+                        default=STREAMING_ANALYSIS_EXTENSION,
+                        help='primary analysis output format (default: .xas)')
     parser.add_argument('-r', '--recursive', action='store_true',
                         help='recurse through input if directory')
 
@@ -45,7 +54,9 @@ def pipeline_with_args(args):
     # Perform analysis on both input and separated audio files
     audio_paths = input_paths + separated_paths
     for audio_path in audio_paths:
-        analysis_with_args(AnalysisArgs(audio_path, 0.0, None, args.json, False))
+        analysis_with_args(
+            AnalysisArgs(audio_path, 0.0, None, args.json, False, args.format)
+        )
 
 
 def pipeline():

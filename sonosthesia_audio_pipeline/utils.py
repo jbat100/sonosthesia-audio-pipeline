@@ -9,6 +9,7 @@ from termcolor import colored
 
 MSGPACK_ANALYSIS_EXTENSION = '.xaa'
 JSON_ANALYSIS_EXTENSION = '.json'
+STREAMING_ANALYSIS_EXTENSION = '.xas'
 JSON_TYPE_CHECK = 'sonosthesia-audio-pipeline'
 
 AUDIO_EXTENSIONS = ['.wav', '.mp3']

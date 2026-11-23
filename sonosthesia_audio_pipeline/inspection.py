@@ -8,7 +8,9 @@ from termcolor import colored
 
 from sonosthesia_audio_pipeline.utils import (input_to_filepaths, remap,
                    ANALYSIS_VERSION, CHANNEL_KEYS, MSGPACK_ANALYSIS_EXTENSION, JSON_ANALYSIS_EXTENSION,
+                   STREAMING_ANALYSIS_EXTENSION,
                    read_packed_with_header, read_json_with_header, audio_analysis_description)
+from sonosthesia_audio_pipeline.streaming import read_streaming_with_header
 
 INSPECTION_DESCRIPTION = 'Inspect an analysis file.'
 
@@ -49,6 +51,10 @@ def load_analysis(file_path, start, duration):
         header, data = read_packed_with_header(file_path)
     elif ext == JSON_ANALYSIS_EXTENSION:
         header, data = read_json_with_header(file_path)
+    elif ext == STREAMING_ANALYSIS_EXTENSION:
+        header, data = read_streaming_with_header(file_path)
+    else:
+        raise ValueError(f'Unsupported analysis extension: {ext}')
     if header[0] != ANALYSIS_VERSION:
         raise ValueError(f"Unexpected version {header[0]}, required {ANALYSIS_VERSION}")
     print(colored(f'Loaded analysis file from {file_path} read header {header}', "green"))
@@ -69,19 +75,27 @@ def load_analysis(file_path, start, duration):
 
 def configure_inspection_parser(parser):
     parser.add_argument('-i', '--input', type=str, nargs='?', required=True,
-                        help=f'path to an analysis {MSGPACK_ANALYSIS_EXTENSION} file or directory')
+                        help='path to an analysis file or directory')
     parser.add_argument('-s', '--start', type=float, default=0.0,
                         help='start time in seconds')
     parser.add_argument('-d', '--duration', type=float, default=None,
                         help='duration in seconds')
     parser.add_argument('-j', '--json', action='store_true',
-                        help='search .json files when input arg is a directory')
+                        help='search .json files when input is a directory')
+    parser.add_argument('-f', '--format',
+                        choices=[STREAMING_ANALYSIS_EXTENSION, MSGPACK_ANALYSIS_EXTENSION,
+                                 JSON_ANALYSIS_EXTENSION],
+                        default=STREAMING_ANALYSIS_EXTENSION,
+                        help='format to search for in a directory (default: .xas)')
     parser.add_argument('-r', '--recursive', action='store_true',
                         help='recurse through input if directory')
 
 
 def inspection_with_args(args):
-    extensions = [JSON_ANALYSIS_EXTENSION] if args.json else [MSGPACK_ANALYSIS_EXTENSION]
+    output_format = JSON_ANALYSIS_EXTENSION if args.json else getattr(
+        args, 'format', STREAMING_ANALYSIS_EXTENSION
+    )
+    extensions = [output_format]
     file_paths = input_to_filepaths(args.input, extensions, args.recursive)
     for file_path in file_paths:
         load_analysis(file_path, args.start, args.duration)
